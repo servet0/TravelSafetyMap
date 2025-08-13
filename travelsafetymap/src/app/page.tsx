@@ -5,16 +5,7 @@ import { SafetyMap } from '../components/SafetyMap';
 import { LocationDetail } from '../components/LocationDetail';
 import { Card, CardContent } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
-import { RiskIndicator } from '../components/RiskIndicator';
-import { 
-  Globe, 
-  MapPin, 
-  AlertTriangle, 
-  TrendingUp, 
-  RefreshCw,
-  Settings,
-  Info
-} from 'lucide-react';
+import { RefreshCw, Info, Globe, Shield, TrendingUp } from 'lucide-react';
 
 interface Location {
   id: string;
@@ -119,135 +110,122 @@ export default function HomePage() {
     setSelectedLocation(null);
   };
 
-  const handleRefreshData = async () => {
+  const handleRefresh = async () => {
     setIsLoading(true);
-    // Gerçek uygulamada DataService.updateAllData() çağrılacak
-    await new Promise(resolve => setTimeout(resolve, 2000)); // Mock delay
-    
-    // Mock veri güncelleme
-    const updatedLocations = mockLocations.map(location => ({
-      ...location,
-      risk_score: Math.floor(Math.random() * 80) + 10 // 10-90 arası rastgele
-    }));
-    
-    setLocations(updatedLocations);
     setLastUpdated(new Date());
+    await new Promise(resolve => setTimeout(resolve, 1000)); // Mock delay
     setIsLoading(false);
-  };
-
-  const getGlobalRiskLevel = () => {
-    if (locations.length === 0) return 0;
-    const averageRisk = locations.reduce((sum, loc) => sum + loc.risk_score, 0) / locations.length;
-    return Math.round(averageRisk);
-  };
-
-  const getHighRiskLocations = () => {
-    return locations.filter(loc => loc.risk_score > 60).length;
   };
 
   if (selectedLocation) {
     return (
-      <LocationDetail
-        locationId={selectedLocation.id}
-        locationType={selectedLocation.type}
-        locationName={selectedLocation.name}
-        riskScore={selectedLocation.risk_score}
-        onBack={handleBackToMap}
-      />
+      <div className="min-h-screen bg-gray-50">
+        <div className="container mx-auto px-4 py-8">
+          <LocationDetail
+            location={selectedLocation}
+            onBack={handleBackToMap}
+          />
+        </div>
+      </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-3">
-              <Globe className="w-8 h-8 text-blue-600" />
-              <div>
-                <h1 className="text-xl font-bold text-gray-900">Travel Safety Map</h1>
-                <p className="text-sm text-gray-600">Dünya geneli güvenlik durumu</p>
-              </div>
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Travel Safety Map</h1>
+              <p className="text-gray-600 mt-2">
+                Dünya genelindeki güvenlik durumu, doğal afet uyarıları ve risk analizi
+              </p>
             </div>
-            
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <RefreshCw className="w-4 h-4" />
-                <span>Son güncelleme: {lastUpdated.toLocaleTimeString('tr-TR')}</span>
-              </div>
-              
-              <Button onClick={handleRefreshData} disabled={isLoading} size="sm">
-                {isLoading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Güncelleniyor...
-                  </>
-                ) : (
-                  <>
-                    <RefreshCw className="w-4 h-4 mr-2" />
-                    Yenile
-                  </>
-                )}
-              </Button>
+            <Button
+              variant="primary"
+              onClick={handleRefresh}
+              disabled={isLoading}
+              className="flex items-center gap-2"
+            >
+              <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+              Yenile
+            </Button>
+          </div>
+
+          {/* İstatistik kartları */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Toplam Lokasyon</p>
+                    <p className="text-2xl font-bold text-gray-900">{locations.length}</p>
+                  </div>
+                  <Globe className="w-8 h-8 text-blue-600" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Ülkeler</p>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {locations.filter(l => l.type === 'country').length}
+                    </p>
+                  </div>
+                  <Globe className="w-8 h-8 text-green-600" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Şehirler</p>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {locations.filter(l => l.type === 'city').length}
+                    </p>
+                  </div>
+                  <Shield className="w-8 h-8 text-purple-600" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Ortalama Risk</p>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {locations.length > 0 
+                        ? Math.round(locations.reduce((sum, l) => sum + l.risk_score, 0) / locations.length)
+                        : 0
+                      }
+                    </p>
+                  </div>
+                  <TrendingUp className="w-8 h-8 text-orange-600" />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Son güncelleme bilgisi */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <span>Son güncelleme:</span>
+              <span className="font-medium">
+                {lastUpdated.toLocaleString('tr-TR')}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <Info className="w-4 h-4" />
+              <span>Veriler her 15 dakikada bir güncellenir</span>
             </div>
           </div>
-        </div>
-      </header>
-
-      {/* Ana içerik */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* İstatistikler */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Toplam Lokasyon</p>
-                  <p className="text-2xl font-bold text-gray-900">{locations.length}</p>
-                </div>
-                <MapPin className="w-8 h-8 text-blue-600" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Genel Risk Seviyesi</p>
-                  <div className="flex items-center gap-2 mt-1">
-                    <RiskIndicator score={getGlobalRiskLevel()} size="sm" />
-                  </div>
-                </div>
-                <AlertTriangle className="w-8 h-8 text-orange-600" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Yüksek Riskli</p>
-                  <p className="text-2xl font-bold text-red-600">{getHighRiskLocations()}</p>
-                </div>
-                <TrendingUp className="w-8 h-8 text-red-600" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Veri Kaynağı</p>
-                  <p className="text-sm text-gray-900">Gerçek Zamanlı</p>
-                </div>
-                <Info className="w-8 h-8 text-green-600" />
-              </div>
-            </CardContent>
-          </Card>
         </div>
 
         {/* Harita */}
@@ -278,42 +256,34 @@ export default function HomePage() {
         {/* Bilgi kartı */}
         <Card>
           <CardContent className="p-6">
-            <div className="flex items-start gap-4">
-              <Info className="w-6 h-6 text-blue-600 mt-1" />
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  Travel Safety Map Hakkında
-                </h3>
-                <p className="text-gray-600 mb-4">
-                  Bu uygulama, dünya genelindeki ülkeler ve şehirler için anlık güvenlik durumu, 
-                  doğal afet uyarıları ve güncel haberleri gösterir. Risk skorları, çeşitli veri 
-                  kaynaklarından toplanan bilgiler kullanılarak hesaplanır.
-                </p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <h4 className="font-medium text-gray-900 mb-2">Veri Kaynakları:</h4>
-                    <ul className="space-y-1 text-gray-600">
-                      <li>• Güvenlik raporları ve uyarıları</li>
-                      <li>• Doğal afet verileri (USGS)</li>
-                      <li>• Hava durumu uyarıları</li>
-                      <li>• Haber sentiment analizi</li>
-                    </ul>
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-gray-900 mb-2">Özellikler:</h4>
-                    <ul className="space-y-1 text-gray-600">
-                      <li>• Gerçek zamanlı risk skorları</li>
-                      <li>• AI destekli 7 günlük tahmin</li>
-                      <li>• Detaylı lokasyon analizi</li>
-                      <li>• Mobil uyumlu tasarım</li>
-                    </ul>
-                  </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="text-center">
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <div className="w-6 h-6 bg-green-500 rounded-full"></div>
                 </div>
+                <h3 className="font-semibold text-gray-900 mb-1">Düşük Risk</h3>
+                <p className="text-sm text-gray-600">0-30 arası risk skoru</p>
+              </div>
+              
+              <div className="text-center">
+                <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <div className="w-6 h-6 bg-yellow-500 rounded-full"></div>
+                </div>
+                <h3 className="font-semibold text-gray-900 mb-1">Orta Risk</h3>
+                <p className="text-sm text-gray-600">31-60 arası risk skoru</p>
+              </div>
+              
+              <div className="text-center">
+                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <div className="w-6 h-6 bg-red-500 rounded-full"></div>
+                </div>
+                <h3 className="font-semibold text-gray-900 mb-1">Yüksek Risk</h3>
+                <p className="text-sm text-gray-600">61-100 arası risk skoru</p>
               </div>
             </div>
           </CardContent>
         </Card>
-      </main>
+      </div>
     </div>
   );
 }

@@ -4,9 +4,9 @@ Dünya genelindeki ülkeler ve şehirler için anlık güvenlik durumu, doğal a
 
 ## 🚀 Özellikler
 
-- **Gerçek Zamanlı Harita**: Mapbox GL JS ile interaktif dünya haritası
+- **Gerçek Zamanlı Harita**: Leaflet ile interaktif dünya haritası (OpenStreetMap)
 - **Risk Skorları**: 0-100 arası risk seviyesi göstergesi
-- **AI Risk Tahmini**: OpenAI GPT-4o-mini ile 7 günlük risk tahmini
+- **Akıllı Risk Tahmini**: Basit algoritma ile 7 günlük risk tahmini
 - **Çoklu Veri Kaynağı**: Güvenlik, hava durumu, doğal afet ve haber verileri
 - **Responsive Tasarım**: Mobil ve masaüstü uyumlu
 - **Dark/Light Theme**: Kullanıcı dostu arayüz
@@ -15,11 +15,11 @@ Dünya genelindeki ülkeler ve şehirler için anlık güvenlik durumu, doğal a
 ## 🛠️ Teknolojiler
 
 - **Frontend**: Next.js 15, TypeScript, Tailwind CSS
-- **Harita**: Mapbox GL JS
-- **Veritabanı**: Supabase (PostgreSQL)
-- **AI**: OpenAI GPT-4o-mini
-- **API'ler**: OpenWeatherMap, USGS, GDELT
-- **Deployment**: Vercel
+- **Harita**: Leaflet + OpenStreetMap (Ücretsiz)
+- **Veritabanı**: Supabase (PostgreSQL - Ücretsiz)
+- **AI**: Basit risk algoritması (Ücretsiz)
+- **API'ler**: OpenWeatherMap (Ücretsiz), USGS (Ücretsiz)
+- **Deployment**: Vercel (Ücretsiz)
 
 ## 📦 Kurulum
 
@@ -27,9 +27,8 @@ Dünya genelindeki ülkeler ve şehirler için anlık güvenlik durumu, doğal a
 
 - Node.js 18+ 
 - npm veya yarn
-- Supabase hesabı
-- Mapbox hesabı
-- OpenAI API anahtarı
+- Supabase hesabı (ücretsiz)
+- OpenWeatherMap API anahtarı (ücretsiz)
 
 ### Adımlar
 
@@ -47,20 +46,13 @@ npm install
 3. **Environment değişkenlerini ayarlayın**
 `.env.local` dosyası oluşturun:
 ```env
-# Supabase Configuration
+# Supabase Configuration (Ücretsiz)
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url_here
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key_here
 SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key_here
 
-# Mapbox Configuration
-NEXT_PUBLIC_MAPBOX_TOKEN=your_mapbox_token_here
-
-# OpenAI Configuration
-OPENAI_API_KEY=your_openai_api_key_here
-
-# API Keys
+# OpenWeatherMap API (Ücretsiz - 1000 istek/gün)
 NEXT_PUBLIC_OPENWEATHER_API_KEY=your_openweather_api_key_here
-NEXT_PUBLIC_GDELT_API_KEY=your_gdelt_api_key_here
 
 # App Configuration
 NEXT_PUBLIC_APP_URL=http://localhost:3000
@@ -72,10 +64,10 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 CREATE TABLE countries (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   name VARCHAR NOT NULL,
-  code VARCHAR(3) NOT NULL UNIQUE,
+  code VARCHAR(3) UNIQUE NOT NULL,
   latitude DECIMAL(10, 8) NOT NULL,
   longitude DECIMAL(11, 8) NOT NULL,
-  risk_score INTEGER DEFAULT 0,
+  risk_score INTEGER DEFAULT 0 CHECK (risk_score >= 0 AND risk_score <= 100),
   last_updated TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -84,10 +76,10 @@ CREATE TABLE countries (
 CREATE TABLE cities (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   name VARCHAR NOT NULL,
-  country_id VARCHAR(3) REFERENCES countries(code),
+  country_id UUID REFERENCES countries(id) ON DELETE CASCADE,
   latitude DECIMAL(10, 8) NOT NULL,
   longitude DECIMAL(11, 8) NOT NULL,
-  risk_score INTEGER DEFAULT 0,
+  risk_score INTEGER DEFAULT 0 CHECK (risk_score >= 0 AND risk_score <= 100),
   last_updated TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -101,7 +93,7 @@ CREATE TABLE security_incidents (
   description TEXT,
   severity VARCHAR(10) NOT NULL CHECK (severity IN ('low', 'medium', 'high', 'critical')),
   source VARCHAR NOT NULL,
-  reported_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  occurred_at TIMESTAMP WITH TIME ZONE NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -112,9 +104,10 @@ CREATE TABLE natural_disasters (
   location_type VARCHAR(10) NOT NULL CHECK (location_type IN ('country', 'city')),
   disaster_type VARCHAR NOT NULL,
   description TEXT,
-  magnitude DECIMAL(3,1),
+  magnitude DECIMAL(5,2),
+  severity VARCHAR(10) NOT NULL CHECK (severity IN ('low', 'medium', 'high', 'critical')),
   source VARCHAR NOT NULL,
-  reported_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  occurred_at TIMESTAMP WITH TIME ZONE NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -194,15 +187,15 @@ POST /api/locations/{id}?type=country
 
 ## 📊 Veri Kaynakları
 
-- **Güvenlik**: US State Department, EU Security Alerts
-- **Doğal Afetler**: USGS Earthquake API
-- **Hava Durumu**: OpenWeatherMap API
-- **Haberler**: GDELT API
-- **AI Tahmin**: OpenAI GPT-4o-mini
+- **Güvenlik**: Mock veri (gerçek API'ler için geliştirilebilir)
+- **Doğal Afetler**: USGS Earthquake API (Ücretsiz)
+- **Hava Durumu**: OpenWeatherMap API (Ücretsiz - 1000 istek/gün)
+- **Haberler**: Mock veri (GDELT API için geliştirilebilir)
+- **AI Tahmin**: Basit algoritma (OpenAI yerine)
 
 ## 🎨 UI Bileşenleri
 
-- `SafetyMap`: Ana harita bileşeni
+- `SafetyMap`: Ana harita bileşeni (Leaflet)
 - `LocationDetail`: Lokasyon detay sayfası
 - `RiskIndicator`: Risk seviyesi göstergesi
 - `Button`, `Card`: UI bileşenleri
@@ -233,10 +226,25 @@ Vercel dashboard'da aşağıdaki environment değişkenlerini ayarlayın:
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
-- `NEXT_PUBLIC_MAPBOX_TOKEN`
-- `OPENAI_API_KEY`
 - `NEXT_PUBLIC_OPENWEATHER_API_KEY`
-- `NEXT_PUBLIC_GDELT_API_KEY`
+
+## 💰 Maliyet Analizi
+
+Bu uygulama tamamen ücretsiz servisler kullanılarak geliştirilmiştir:
+
+- **Supabase**: Ücretsiz tier (500MB veritabanı, 50,000 satır/ay)
+- **OpenWeatherMap**: Ücretsiz tier (1000 istek/gün)
+- **OpenStreetMap**: Tamamen ücretsiz
+- **Vercel**: Ücretsiz tier (100GB bandwidth/ay)
+- **USGS API**: Tamamen ücretsiz
+
+## 🔮 Gelecek Geliştirmeler
+
+- Gerçek güvenlik API'leri entegrasyonu
+- GDELT API entegrasyonu
+- Push notification sistemi
+- Premium özellikler
+- Mobil uygulama
 
 ## 🤝 Katkıda Bulunma
 
@@ -257,8 +265,9 @@ Bu proje MIT lisansı altında lisanslanmıştır.
 
 ## 🙏 Teşekkürler
 
-- [Mapbox](https://www.mapbox.com/) - Harita servisleri
-- [Supabase](https://supabase.com/) - Veritabanı
-- [OpenAI](https://openai.com/) - AI servisleri
+- [OpenStreetMap](https://www.openstreetmap.org/) - Ücretsiz harita verileri
+- [Leaflet](https://leafletjs.com/) - Açık kaynak harita kütüphanesi
+- [Supabase](https://supabase.com/) - Ücretsiz veritabanı
+- [OpenWeatherMap](https://openweathermap.org/) - Ücretsiz hava durumu API'si
 - [Next.js](https://nextjs.org/) - React framework
 - [Tailwind CSS](https://tailwindcss.com/) - CSS framework

@@ -1,111 +1,164 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardHeader, CardContent } from './ui/Card';
+import { Card, CardContent, CardHeader } from './ui/Card';
 import { Button } from './ui/Button';
 import { RiskIndicator } from './RiskIndicator';
 import { 
   MapPin, 
   AlertTriangle, 
-  Newspaper, 
   Cloud, 
-  Activity,
-  ArrowLeft,
-  RefreshCw,
+  Globe, 
+  Calendar,
   TrendingUp,
-  Shield,
-  Clock
+  Info,
+  ArrowLeft
 } from 'lucide-react';
-import { format } from 'date-fns';
+import { formatDistanceToNow } from 'date-fns';
 import { tr } from 'date-fns/locale';
 
+interface Location {
+  id: string;
+  name: string;
+  latitude: number;
+  longitude: number;
+  risk_score: number;
+  type: 'country' | 'city';
+}
+
 interface LocationDetailProps {
-  locationId: string;
-  locationType: 'country' | 'city';
-  locationName: string;
-  riskScore: number;
+  location: Location;
   onBack: () => void;
 }
 
-interface DetailData {
-  incidents: any[];
-  disasters: any[];
-  weatherWarnings: any[];
-  news: any[];
-  aiPrediction?: any;
+interface SecurityIncident {
+  id: string;
+  type: string;
+  description: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  source: string;
+  occurredAt: string;
+}
+
+interface NaturalDisaster {
+  id: string;
+  type: string;
+  description: string;
+  magnitude?: number;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  source: string;
+  occurredAt: string;
+}
+
+interface WeatherWarning {
+  id: string;
+  type: string;
+  description: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  source: string;
+  validUntil: string;
+}
+
+interface NewsItem {
+  id: string;
+  title: string;
+  content: string;
+  url?: string;
+  source: string;
+  sentimentScore: number;
+  publishedAt: string;
+}
+
+interface AIRiskPrediction {
+  predictedScore: number;
+  confidence: number;
+  factors: string[];
+  predictedForDate: string;
+  reasoning: string;
 }
 
 export const LocationDetail: React.FC<LocationDetailProps> = ({
-  locationId,
-  locationType,
-  locationName,
-  riskScore,
+  location,
   onBack
 }) => {
-  const [data, setData] = useState<DetailData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+  const [securityIncidents, setSecurityIncidents] = useState<SecurityIncident[]>([]);
+  const [naturalDisasters, setNaturalDisasters] = useState<NaturalDisaster[]>([]);
+  const [weatherWarnings, setWeatherWarnings] = useState<WeatherWarning[]>([]);
+  const [news, setNews] = useState<NewsItem[]>([]);
+  const [aiPrediction, setAiPrediction] = useState<AIRiskPrediction | null>(null);
+  const [isGeneratingPrediction, setIsGeneratingPrediction] = useState(false);
 
   useEffect(() => {
     loadLocationDetails();
-  }, [locationId, locationType]);
+  }, [location]);
 
   const loadLocationDetails = async () => {
     setIsLoading(true);
+    
     try {
-      // Gerçek uygulamada DataService.getLocationDetails kullanılacak
-      // Şimdilik mock veri kullanıyoruz
-      const mockData: DetailData = {
-        incidents: [
-          {
-            id: '1',
-            incident_type: 'Güvenlik Uyarısı',
-            description: 'Bölgede güvenlik olayları bildirildi',
-            severity: 'medium',
-            reported_at: new Date().toISOString(),
-            source: 'Yerel Güvenlik'
-          }
-        ],
-        disasters: [
-          {
-            id: '1',
-            disaster_type: 'Deprem',
-            description: '4.2 büyüklüğünde deprem kaydedildi',
-            magnitude: 4.2,
-            reported_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-            source: 'USGS'
-          }
-        ],
-        weatherWarnings: [
-          {
-            id: '1',
-            warning_type: 'Fırtına Uyarısı',
-            description: 'Güçlü rüzgar ve yağış bekleniyor',
-            severity: 'high',
-            valid_until: new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString(),
-            source: 'Meteoroloji'
-          }
-        ],
-        news: [
-          {
-            id: '1',
-            title: 'Bölgede güvenlik durumu',
-            content: 'Yerel yetkililer güvenlik önlemlerini artırdı',
-            url: '#',
-            source: 'Yerel Haber',
-            sentiment_score: -0.3,
-            published_at: new Date().toISOString()
-          }
-        ],
-        aiPrediction: {
-          predicted_risk_score: 65,
-          confidence: 0.78,
-          factors: ['Güvenlik olayları', 'Hava durumu uyarıları'],
-          recommendations: ['Dikkatli olun', 'Resmi kaynakları takip edin']
-        }
-      };
+      // Mock veri yükleme simülasyonu
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      setData(mockData);
+      // Mock güvenlik olayları
+      setSecurityIncidents([
+        {
+          id: '1',
+          type: 'Protest',
+          description: 'Merkezi bölgede barışçıl protesto gösterisi',
+          severity: 'medium',
+          source: 'Yerel Güvenlik',
+          occurredAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
+        }
+      ]);
+
+      // Mock doğal afetler
+      setNaturalDisasters([
+        {
+          id: '1',
+          type: 'Deprem',
+          description: 'Hafif şiddetli deprem meydana geldi',
+          magnitude: 4.2,
+          severity: 'low',
+          source: 'USGS',
+          occurredAt: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString()
+        }
+      ]);
+
+      // Mock hava durumu uyarıları
+      setWeatherWarnings([
+        {
+          id: '1',
+          type: 'Fırtına',
+          description: 'Güçlü rüzgar ve yağış bekleniyor',
+          severity: 'medium',
+          source: 'OpenWeatherMap',
+          validUntil: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+        }
+      ]);
+
+      // Mock haberler
+      setNews([
+        {
+          id: '1',
+          title: 'Ekonomik iyileşme sinyalleri',
+          content: 'Bölgede ekonomik aktivitelerde artış gözlemleniyor...',
+          url: 'https://example.com/news1',
+          source: 'Yerel Haber',
+          sentimentScore: 0.7,
+          publishedAt: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString()
+        },
+        {
+          id: '2',
+          title: 'Altyapı çalışmaları devam ediyor',
+          content: 'Şehir merkezinde altyapı iyileştirme çalışmaları...',
+          url: 'https://example.com/news2',
+          source: 'Resmi Kaynak',
+          sentimentScore: 0.5,
+          publishedAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString()
+        }
+      ]);
+
     } catch (error) {
       console.error('Lokasyon detayları yüklenirken hata:', error);
     } finally {
@@ -114,27 +167,25 @@ export const LocationDetail: React.FC<LocationDetailProps> = ({
   };
 
   const generateAIPrediction = async () => {
-    setIsGeneratingAI(true);
+    setIsGeneratingPrediction(true);
+    
     try {
-      // Gerçek uygulamada DataService.generateAIRiskPrediction kullanılacak
-      await new Promise(resolve => setTimeout(resolve, 2000)); // Mock delay
+      // Mock AI tahmin simülasyonu
+      await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // Mock AI tahmini
-      const mockPrediction = {
-        predicted_risk_score: Math.floor(Math.random() * 40) + 30,
+      const mockPrediction: AIRiskPrediction = {
+        predictedScore: Math.min(100, location.risk_score + Math.floor(Math.random() * 20) - 10),
         confidence: 0.7 + Math.random() * 0.2,
-        factors: ['Güncel güvenlik durumu', 'Hava koşulları'],
-        recommendations: ['Dikkatli olun', 'Acil durum planınızı gözden geçirin']
+        factors: ['Güvenlik olayları', 'Hava durumu uyarıları'],
+        predictedForDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        reasoning: `${location.name} için 7 günlük risk tahmini: Mevcut durumda orta seviye risk devam edecek. Hava durumu ve güvenlik faktörleri dikkatle takip edilmeli.`
       };
       
-      setData(prev => prev ? {
-        ...prev,
-        aiPrediction: mockPrediction
-      } : null);
+      setAiPrediction(mockPrediction);
     } catch (error) {
-      console.error('AI tahmini oluşturulurken hata:', error);
+      console.error('AI tahmin oluşturulurken hata:', error);
     } finally {
-      setIsGeneratingAI(false);
+      setIsGeneratingPrediction(false);
     }
   };
 
@@ -148,18 +199,22 @@ export const LocationDetail: React.FC<LocationDetailProps> = ({
     }
   };
 
-  const getSentimentColor = (score: number) => {
-    if (score > 0.3) return 'text-green-600';
-    if (score < -0.3) return 'text-red-600';
-    return 'text-yellow-600';
+  const getSeverityText = (severity: string) => {
+    switch (severity) {
+      case 'low': return 'Düşük';
+      case 'medium': return 'Orta';
+      case 'high': return 'Yüksek';
+      case 'critical': return 'Kritik';
+      default: return 'Bilinmiyor';
+    }
   };
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-2 text-gray-600">Detaylar yükleniyor...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Detaylar yükleniyor...</p>
         </div>
       </div>
     );
@@ -170,207 +225,262 @@ export const LocationDetail: React.FC<LocationDetailProps> = ({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" onClick={onBack}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onBack}
+            className="flex items-center gap-2"
+          >
             <ArrowLeft className="w-4 h-4" />
+            Geri
           </Button>
           <div>
-            <h1 className="text-2xl font-bold">{locationName}</h1>
-            <p className="text-gray-600 capitalize">{locationType}</p>
+            <h1 className="text-2xl font-bold text-gray-900">{location.name}</h1>
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <MapPin className="w-4 h-4" />
+              <span>{location.type === 'country' ? 'Ülke' : 'Şehir'}</span>
+              <span>•</span>
+              <span>{location.latitude.toFixed(4)}, {location.longitude.toFixed(4)}</span>
+            </div>
           </div>
         </div>
-        <Button onClick={loadLocationDetails} variant="secondary">
-          <RefreshCw className="w-4 h-4 mr-2" />
-          Yenile
-        </Button>
+        <RiskIndicator score={location.risk_score} />
       </div>
 
-      {/* Risk Özeti */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Risk Durumu</h2>
-            <RiskIndicator score={riskScore} size="lg" />
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="text-center p-4 bg-gray-50 rounded-lg">
-              <AlertTriangle className="w-6 h-6 text-red-500 mx-auto mb-2" />
-              <p className="text-sm text-gray-600">Güvenlik Olayları</p>
-              <p className="text-xl font-bold">{data?.incidents.length || 0}</p>
-            </div>
-            <div className="text-center p-4 bg-gray-50 rounded-lg">
-              <Cloud className="w-6 h-6 text-blue-500 mx-auto mb-2" />
-              <p className="text-sm text-gray-600">Hava Uyarıları</p>
-              <p className="text-xl font-bold">{data?.weatherWarnings.length || 0}</p>
-            </div>
-            <div className="text-center p-4 bg-gray-50 rounded-lg">
-              <Activity className="w-6 h-6 text-orange-500 mx-auto mb-2" />
-              <p className="text-sm text-gray-600">Doğal Afetler</p>
-              <p className="text-xl font-bold">{data?.disasters.length || 0}</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* AI Risk Tahmini */}
+      {/* Risk Tahmini */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <TrendingUp className="w-5 h-5 text-blue-600" />
-              <h2 className="text-lg font-semibold">AI Risk Tahmini (7 Gün)</h2>
+              <h2 className="text-lg font-semibold">7 Günlük Risk Tahmini</h2>
             </div>
-            <Button 
-              onClick={generateAIPrediction} 
-              disabled={isGeneratingAI}
-              size="sm"
-            >
-              {isGeneratingAI ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Hesaplanıyor...
-                </>
-              ) : (
-                'Yeni Tahmin'
-              )}
-            </Button>
+            {!aiPrediction && (
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={generateAIPrediction}
+                disabled={isGeneratingPrediction}
+              >
+                {isGeneratingPrediction ? 'Tahmin Oluşturuluyor...' : 'AI Tahmin Oluştur'}
+              </Button>
+            )}
           </div>
         </CardHeader>
         <CardContent>
-          {data?.aiPrediction ? (
+          {aiPrediction ? (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Tahmini Risk Skoru:</span>
-                <RiskIndicator score={data.aiPrediction.predicted_risk_score} />
+                <div className="flex items-center gap-3">
+                  <RiskIndicator score={aiPrediction.predictedScore} />
+                  <div>
+                    <p className="text-sm text-gray-600">Tahmin Edilen Risk</p>
+                    <p className="font-semibold">{aiPrediction.predictedScore}/100</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm text-gray-600">Güven Oranı</p>
+                  <p className="font-semibold">{(aiPrediction.confidence * 100).toFixed(0)}%</p>
+                </div>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Güven Oranı:</span>
-                <span className="text-sm font-medium">
-                  %{Math.round(data.aiPrediction.confidence * 100)}
-                </span>
-              </div>
+              
               <div>
-                <p className="text-sm text-gray-600 mb-2">Risk Faktörleri:</p>
-                <ul className="list-disc list-inside text-sm space-y-1">
-                  {data.aiPrediction.factors.map((factor, index) => (
-                    <li key={index}>{factor}</li>
-                  ))}
-                </ul>
+                <p className="text-sm font-medium text-gray-700 mb-2">Tahmin Tarihi</p>
+                <p className="text-sm text-gray-600">{aiPrediction.predictedForDate}</p>
               </div>
+              
               <div>
-                <p className="text-sm text-gray-600 mb-2">Öneriler:</p>
-                <ul className="list-disc list-inside text-sm space-y-1">
-                  {data.aiPrediction.recommendations.map((rec, index) => (
-                    <li key={index}>{rec}</li>
+                <p className="text-sm font-medium text-gray-700 mb-2">Ana Faktörler</p>
+                <div className="flex flex-wrap gap-2">
+                  {aiPrediction.factors.map((factor, index) => (
+                    <span
+                      key={index}
+                      className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full"
+                    >
+                      {factor}
+                    </span>
                   ))}
-                </ul>
+                </div>
+              </div>
+              
+              <div>
+                <p className="text-sm font-medium text-gray-700 mb-2">Analiz</p>
+                <p className="text-sm text-gray-600">{aiPrediction.reasoning}</p>
               </div>
             </div>
           ) : (
-            <p className="text-gray-500 text-center py-4">
-              AI risk tahmini henüz oluşturulmadı.
-            </p>
+            <div className="text-center py-8">
+              <Info className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-600">
+                AI destekli 7 günlük risk tahmini oluşturmak için butona tıklayın.
+              </p>
+            </div>
           )}
         </CardContent>
       </Card>
 
       {/* Güvenlik Olayları */}
-      {data?.incidents.length > 0 && (
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <Shield className="w-5 h-5 text-red-600" />
-              <h2 className="text-lg font-semibold">Son Güvenlik Olayları</h2>
-            </div>
-          </CardHeader>
-          <CardContent>
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="w-5 h-5 text-red-600" />
+            <h2 className="text-lg font-semibold">Güvenlik Olayları</h2>
+            <span className="text-sm text-gray-500">({securityIncidents.length})</span>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {securityIncidents.length > 0 ? (
             <div className="space-y-3">
-              {data.incidents.map((incident) => (
-                <div key={incident.id} className="border-l-4 border-red-500 pl-4 py-2">
+              {securityIncidents.map((incident) => (
+                <div key={incident.id} className="border-l-4 border-red-500 pl-4">
                   <div className="flex items-start justify-between">
                     <div>
-                      <h3 className="font-medium">{incident.incident_type}</h3>
-                      <p className="text-sm text-gray-600">{incident.description}</p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {format(new Date(incident.reported_at), 'dd MMM yyyy HH:mm', { locale: tr })}
-                      </p>
+                      <h3 className="font-medium">{incident.type}</h3>
+                      <p className="text-sm text-gray-600 mt-1">{incident.description}</p>
+                      <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
+                        <span>Kaynak: {incident.source}</span>
+                        <span>{formatDistanceToNow(new Date(incident.occurredAt), { addSuffix: true, locale: tr })}</span>
+                      </div>
                     </div>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getSeverityColor(incident.severity)}`}>
-                      {incident.severity}
+                    <span className={`px-2 py-1 text-xs rounded-full ${getSeverityColor(incident.severity)}`}>
+                      {getSeverityText(incident.severity)}
                     </span>
                   </div>
                 </div>
               ))}
             </div>
-          </CardContent>
-        </Card>
-      )}
+          ) : (
+            <p className="text-gray-600 text-center py-4">Güvenlik olayı bulunmuyor.</p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Doğal Afetler */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Globe className="w-5 h-5 text-orange-600" />
+            <h2 className="text-lg font-semibold">Doğal Afetler</h2>
+            <span className="text-sm text-gray-500">({naturalDisasters.length})</span>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {naturalDisasters.length > 0 ? (
+            <div className="space-y-3">
+              {naturalDisasters.map((disaster) => (
+                <div key={disaster.id} className="border-l-4 border-orange-500 pl-4">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <h3 className="font-medium">{disaster.type}</h3>
+                      <p className="text-sm text-gray-600 mt-1">{disaster.description}</p>
+                      {disaster.magnitude && (
+                        <p className="text-sm text-gray-500 mt-1">Büyüklük: {disaster.magnitude}</p>
+                      )}
+                      <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
+                        <span>Kaynak: {disaster.source}</span>
+                        <span>{formatDistanceToNow(new Date(disaster.occurredAt), { addSuffix: true, locale: tr })}</span>
+                      </div>
+                    </div>
+                    <span className={`px-2 py-1 text-xs rounded-full ${getSeverityColor(disaster.severity)}`}>
+                      {getSeverityText(disaster.severity)}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-600 text-center py-4">Doğal afet bulunmuyor.</p>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Hava Durumu Uyarıları */}
-      {data?.weatherWarnings.length > 0 && (
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <Cloud className="w-5 h-5 text-blue-600" />
-              <h2 className="text-lg font-semibold">Hava Durumu Uyarıları</h2>
-            </div>
-          </CardHeader>
-          <CardContent>
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Cloud className="w-5 h-5 text-blue-600" />
+            <h2 className="text-lg font-semibold">Hava Durumu Uyarıları</h2>
+            <span className="text-sm text-gray-500">({weatherWarnings.length})</span>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {weatherWarnings.length > 0 ? (
             <div className="space-y-3">
-              {data.weatherWarnings.map((warning) => (
-                <div key={warning.id} className="border-l-4 border-blue-500 pl-4 py-2">
+              {weatherWarnings.map((warning) => (
+                <div key={warning.id} className="border-l-4 border-blue-500 pl-4">
                   <div className="flex items-start justify-between">
                     <div>
-                      <h3 className="font-medium">{warning.warning_type}</h3>
-                      <p className="text-sm text-gray-600">{warning.description}</p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        Geçerli: {format(new Date(warning.valid_until), 'dd MMM yyyy HH:mm', { locale: tr })}
-                      </p>
+                      <h3 className="font-medium">{warning.type}</h3>
+                      <p className="text-sm text-gray-600 mt-1">{warning.description}</p>
+                      <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
+                        <span>Kaynak: {warning.source}</span>
+                        <span>Geçerli: {formatDistanceToNow(new Date(warning.validUntil), { addSuffix: true, locale: tr })}</span>
+                      </div>
                     </div>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getSeverityColor(warning.severity)}`}>
-                      {warning.severity}
+                    <span className={`px-2 py-1 text-xs rounded-full ${getSeverityColor(warning.severity)}`}>
+                      {getSeverityText(warning.severity)}
                     </span>
                   </div>
                 </div>
               ))}
             </div>
-          </CardContent>
-        </Card>
-      )}
+          ) : (
+            <p className="text-gray-600 text-center py-4">Hava durumu uyarısı bulunmuyor.</p>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Haberler */}
-      {data?.news.length > 0 && (
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <Newspaper className="w-5 h-5 text-green-600" />
-              <h2 className="text-lg font-semibold">Son Haberler</h2>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {data.news.map((item) => (
-                <div key={item.id} className="border rounded-lg p-3">
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Calendar className="w-5 h-5 text-green-600" />
+            <h2 className="text-lg font-semibold">Son Haberler</h2>
+            <span className="text-sm text-gray-500">({news.length})</span>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {news.length > 0 ? (
+            <div className="space-y-4">
+              {news.map((item) => (
+                <div key={item.id} className="border-b border-gray-200 pb-4 last:border-b-0">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <h3 className="font-medium">{item.title}</h3>
-                      <p className="text-sm text-gray-600 mt-1">{item.content}</p>
+                      <p className="text-sm text-gray-600 mt-1 line-clamp-2">{item.content}</p>
                       <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
                         <span>{item.source}</span>
-                        <span>{format(new Date(item.published_at), 'dd MMM yyyy', { locale: tr })}</span>
+                        <span>{formatDistanceToNow(new Date(item.publishedAt), { addSuffix: true, locale: tr })}</span>
+                        <span className={`px-2 py-1 rounded-full ${
+                          item.sentimentScore > 0.5 ? 'bg-green-100 text-green-800' : 
+                          item.sentimentScore < 0.5 ? 'bg-red-100 text-red-800' : 
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {item.sentimentScore > 0.5 ? 'Pozitif' : 
+                           item.sentimentScore < 0.5 ? 'Negatif' : 'Nötr'}
+                        </span>
                       </div>
                     </div>
-                    <div className={`px-2 py-1 rounded-full text-xs font-medium ${getSentimentColor(item.sentiment_score)}`}>
-                      {item.sentiment_score > 0.3 ? 'Pozitif' : item.sentiment_score < -0.3 ? 'Negatif' : 'Nötr'}
-                    </div>
+                    {item.url && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => window.open(item.url, '_blank')}
+                        className="ml-4"
+                      >
+                        Oku
+                      </Button>
+                    )}
                   </div>
                 </div>
               ))}
             </div>
-          </CardContent>
-        </Card>
-      )}
+          ) : (
+            <p className="text-gray-600 text-center py-4">Haber bulunmuyor.</p>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };
+
