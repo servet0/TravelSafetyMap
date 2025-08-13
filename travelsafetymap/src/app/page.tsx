@@ -20,7 +20,8 @@ export default function HomePage() {
   const [locations, setLocations] = useState<Location[]>([]);
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [isClient, setIsClient] = useState(false);
 
   // Mock veri - gerçek uygulamada DataService'den gelecek
   const mockLocations: Location[] = [
@@ -91,6 +92,9 @@ export default function HomePage() {
   ];
 
   useEffect(() => {
+    setIsClient(true);
+    setLastUpdated(new Date());
+    
     // Mock veri yükleme simülasyonu
     const loadData = async () => {
       setIsLoading(true);
@@ -218,7 +222,7 @@ export default function HomePage() {
             <div className="flex items-center gap-2 text-sm text-gray-600">
               <span>Son güncelleme:</span>
               <span className="font-medium">
-                {lastUpdated.toLocaleString('tr-TR')}
+                {isClient && lastUpdated ? lastUpdated.toLocaleString('tr-TR') : 'Yükleniyor...'}
               </span>
             </div>
             <div className="flex items-center gap-2 text-sm text-gray-600">

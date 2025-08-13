@@ -2,23 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Leaflet CSS düzeltmeleri */
-.leaflet-container {
-  z-index: 1;
-}
-
-.leaflet-popup-content-wrapper {
-  border-radius: 8px;
-}
-
-.leaflet-popup-content {
-  margin: 8px 12px;
-}
-
-.leaflet-popup-tip {
-  background: white;
-}
-
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
